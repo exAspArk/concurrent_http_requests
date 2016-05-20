@@ -1,5 +1,6 @@
 require 'benchmark/ips'
 require 'net/http'
+require 'typhoeus'
 
 REPEAT_COUNT = 10
 URL = 'http://google.com'
@@ -27,7 +28,11 @@ Benchmark.ips do |x|
     end
   end
 
-  x.report('Typhoeus') {} # TODO
+  x.report('Typhoeus') do
+    hydra = Typhoeus::Hydra.new
+    REPEAT_COUNT.times { hydra.queue(Typhoeus::Request.new(URL, followlocation: false)) }
+    hydra.run
+  end
 
   x.report('Parallel') {} # TODO
 

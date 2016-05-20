@@ -7,3 +7,5 @@ gem 'celluloid'
 gem 'typhoeus'
 gem 'em-http-request'
 gem 'em-synchrony'
+
+gem 'pry'

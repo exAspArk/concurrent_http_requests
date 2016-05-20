@@ -3,5 +3,5 @@
 ## Benchmark
 
 ```ruby
-ruby benchmark.rb
+REPEAT_COUNT=10 ruby benchmark.rb
 ```

@@ -4,7 +4,7 @@ require 'curb'
 require 'typhoeus'
 require 'parallel'
 
-REPEAT_COUNT = 10
+REPEAT_COUNT = (ENV['REPEAT_COUNT'] || 10).to_i
 URL = 'http://google.com'
 
 Benchmark.ips do |x|
@@ -25,7 +25,6 @@ Benchmark.ips do |x|
         request = Net::HTTP::Get.new(uri)
         Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
       end
-
       thread.join
     end
   end
@@ -35,6 +34,15 @@ Benchmark.ips do |x|
       thread = Thread.new { Curl.get(URL) }
       thread.join
     end
+  end
+
+  x.report('Curb Multi') do
+    urls = [URL] * REPEAT_COUNT
+    curl_multi = Curl::Multi.new
+    urls.each do |url|
+      curl_multi.add(Curl::Easy.new(url))
+    end
+    curl_multi.perform
   end
 
   x.report('Typhoeus') do

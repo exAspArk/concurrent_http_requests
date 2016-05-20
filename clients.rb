@@ -153,7 +153,7 @@ module Clients
     require 'em-synchrony'
 
     # Use this module with refinement instead of requiring 'em-synchrony/em-http'
-    # which doesn't allow to use em-http-request without fibers
+    # which doesn't allow to use em-http-request without fibers after that
     module EmHttp
       refine ::EventMachine::HttpConnection do
         alias :aget :get

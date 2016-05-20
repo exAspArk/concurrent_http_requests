@@ -2,10 +2,12 @@ require 'benchmark/ips'
 require 'net/http'
 require 'curb'
 require 'typhoeus'
+require 'patron'
 require 'parallel'
 require 'celluloid'
+require 'connection_pool'
 
-REPEAT_COUNT = (ENV['REPEAT_COUNT'] || 10).to_i
+REPEAT_COUNT = (ENV['REPEAT_COUNT'] || 5).to_i
 URLS = ['http://google.com'] * REPEAT_COUNT
 
 def net_http_response(url)
@@ -32,7 +34,7 @@ Benchmark.ips do |x|
     response_bodies
   end
 
-  x.report('Threads Net::HTTP') do
+  x.report('Net::HTTP in threads') do
     response_bodies = []
 
     URLS.each do |url|
@@ -43,7 +45,7 @@ Benchmark.ips do |x|
     response_bodies
   end
 
-  x.report('Threads Curb') do
+  x.report('Curb in threads') do
     response_bodies = []
 
     URLS.each do |url|
@@ -84,6 +86,19 @@ Benchmark.ips do |x|
     hydra.run
 
     response_bodies = requests.map { |req| req.response.body }
+    response_bodies
+  end
+
+  x.report('Patron with ConnectionPool') do
+    response_bodies = []
+
+    patron_pool = ConnectionPool.new(size: URLS.size, timeout: 5) do
+      Patron::Session.new { |s| s.max_redirects = 0 }
+    end
+    URLS.each do |url|
+      response_bodies << patron_pool.with { |session| session.get(url) }
+    end
+
     response_bodies
   end
 

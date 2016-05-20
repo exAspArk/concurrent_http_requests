@@ -15,7 +15,19 @@
 ## Benchmark
 
 ```
-REPEAT_COUNT=5 ruby benchmark.rb
+$ REPEAT_COUNT=5 ruby benchmark.rb
+
+Comparison:
+              Parallel in threads: 4.1 i/s
+                  Curb in threads: 4.1 i/s - 1.01x slower
+                       Curb Multi: 4.1 i/s - 1.01x slower
+                   Typhoeus Hydra: 4.0 i/s - 1.03x slower
+EM-HTTP-request with EM-Synchrony: 4.0 i/s - 1.03x slower
+            EM-HTTP-request Multi: 4.0 i/s - 1.04x slower
+             Net::HTTP in threads: 4.0 i/s - 1.04x slower
+       Patron with ConnectionPool: 1.4 i/s - 2.86x slower
+                Celluloid futures: 0.8 i/s - 4.88x slower
+            Net::HTTP in sequence: 0.8 i/s - 5.46x slower
 ```
 
 ## Useful links

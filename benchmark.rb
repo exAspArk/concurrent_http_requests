@@ -6,6 +6,7 @@ require 'patron'
 require 'parallel'
 require 'celluloid'
 require 'connection_pool'
+require 'em-http-request'
 
 REPEAT_COUNT = (ENV['REPEAT_COUNT'] || 5).to_i
 URLS = ['http://google.com'] * REPEAT_COUNT
@@ -29,7 +30,7 @@ end
 Benchmark.ips do |x|
   x.warmup = 0
 
-  x.report('Sequential Net::HTTP') do
+  x.report('Net::HTTP in sequence') do
     response_bodies = URLS.map { |url| net_http_response(url).body }
     response_bodies
   end
@@ -74,7 +75,7 @@ Benchmark.ips do |x|
     response_bodies
   end
 
-  x.report('Typhoeus') do
+  x.report('Typhoeus Hydra') do
     response_bodies = []
 
     hydra = Typhoeus::Hydra.new
@@ -102,19 +103,33 @@ Benchmark.ips do |x|
     response_bodies
   end
 
-  x.report('Parallel') do
+  x.report('Parallel in threads') do
     response_bodies = Parallel.map(URLS, in_threads: URLS.size) { |url| net_http_response(url).body }
     response_bodies
   end
 
-  x.report('Celluloid') do
+  x.report('Celluloid futures') do
     worker = CelluloidWorker.new
     futures = URLS.map { |url| worker.future.get(url) }
     response_bodies = futures.map { |future| future.value.body }
     response_bodies
   end
 
-  # x.report('Em-http-request') {} # TODO
+  x.report('EM-HTTP-request') do
+    response_bodies = []
+
+    EventMachine.run do
+      multi = EventMachine::MultiRequest.new
+      URLS.each_with_index { |url, i| multi.add("#{i}:#{url}", EventMachine::HttpRequest.new(url).get) }
+
+      multi.callback do
+        response_bodies = multi.responses[:callback].values.map(&:response)
+        EventMachine.stop
+      end
+    end
+
+    response_bodies
+  end
 
   # x.report('Em-http-request with Em-Synchrony') {} # TODO
 

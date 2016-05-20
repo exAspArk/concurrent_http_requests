@@ -1,8 +1,20 @@
 # Concurrent HTTP requests in Ruby
 
+## Options
+
+* Net::HTTP in sequence
+* Net::HTTP in threads
+* Curb in threads
+* Curb Multi
+* Typhoeus Hydra
+* Patron with ConnectionPool
+* Parallel in threads
+* Celluloid futures
+* EM-HTTP-request Multi
+
 ## Benchmark
 
-```ruby
+```
 REPEAT_COUNT=5 ruby benchmark.rb
 ```
 

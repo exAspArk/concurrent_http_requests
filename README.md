@@ -1,4 +1,4 @@
-# Concurrent HTTP requests
+# Concurrent HTTP requests in Ruby
 
 ## Benchmark
 

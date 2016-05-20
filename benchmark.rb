@@ -1,6 +1,8 @@
 require 'benchmark/ips'
 require 'net/http'
+require 'curb'
 require 'typhoeus'
+require 'parallel'
 
 REPEAT_COUNT = 10
 URL = 'http://google.com'
@@ -10,20 +12,27 @@ Benchmark.ips do |x|
 
   x.report('Sequential Net::HTTP') do
     REPEAT_COUNT.times do
-      url = URI.parse(URL)
-      request = Net::HTTP::Get.new(url)
-      Net::HTTP.start(url.host, url.port) { |http| http.request(request) }
+      uri = URI.parse(URL)
+      request = Net::HTTP::Get.new(uri)
+      Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
     end
   end
 
   x.report('Threads Net::HTTP') do
     REPEAT_COUNT.times do
       thread = Thread.new do
-        url = URI.parse(URL)
-        request = Net::HTTP::Get.new(url)
-        Net::HTTP.start(url.host, url.port) { |http| http.request(request) }
+        uri = URI.parse(URL)
+        request = Net::HTTP::Get.new(uri)
+        Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
       end
 
+      thread.join
+    end
+  end
+
+  x.report('Threads Curb') do
+    REPEAT_COUNT.times do
+      thread = Thread.new { Curl.get(URL) }
       thread.join
     end
   end
@@ -34,7 +43,14 @@ Benchmark.ips do |x|
     hydra.run
   end
 
-  x.report('Parallel') {} # TODO
+  x.report('Parallel') do
+    urls = [URL] * REPEAT_COUNT
+    Parallel.each(urls, in_threads: urls.size) do |url|
+      uri = URI.parse(url)
+      request = Net::HTTP::Get.new(uri)
+      Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
+    end
+  end
 
   x.report('Celluloid') {} # TODO
 

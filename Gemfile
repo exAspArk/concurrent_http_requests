@@ -8,4 +8,6 @@ gem 'typhoeus'
 gem 'em-http-request'
 gem 'em-synchrony'
 
+gem 'curb'
+
 gem 'pry'
